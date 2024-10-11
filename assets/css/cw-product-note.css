@@ -1,0 +1,35 @@
+.product-note-container {
+    display: flex;
+    align-items: start;
+    gap: 15px;
+}
+
+.product-note-container textarea {
+    width: 100%;
+    min-height: 40px;
+    min-width: 80px;
+    resize: vertical;
+    padding: 10px;
+    font-size: 14px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.product-note-container textarea::placeholder {
+    content: 'Poznámka'
+}
+
+.product-note-container textarea:focus {
+    border-color: #e48100;
+}
+
+.product-note-container i {
+    font-size: 20px;
+    color: #666;
+    cursor: pointer;
+    padding-top: 10px;
+}
+
+small {
+    font-size: 75% !important;
+}
