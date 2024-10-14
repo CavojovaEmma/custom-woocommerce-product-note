@@ -4,9 +4,8 @@
     gap: 15px;
 }
 
-.product-note-container textarea {
+.product-note-container > div > textarea {
     width: 100%;
-    min-height: 40px;
     min-width: 80px;
     resize: vertical;
     padding: 10px;
@@ -15,15 +14,11 @@
     cursor: pointer;
 }
 
-.product-note-container textarea::placeholder {
-    content: 'Poznámka'
-}
-
-.product-note-container textarea:focus {
+.product-note-container > div > textarea:focus {
     border-color: #e48100;
 }
 
-.product-note-container i {
+.product-note-container > i {
     font-size: 20px;
     color: #666;
     cursor: pointer;

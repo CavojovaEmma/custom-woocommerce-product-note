@@ -7,41 +7,76 @@ if ( ! defined('ABSPATH') ) {
 
 class CW_Product_Note
 {
+    /**
+     * Static property to hold our singleton instance
+     *
+     */
+    static $instance = false;
 
     /**
-     * Initialize the plugin
+     * Constructor
+     *
+     * @return void
      */
-    public static function init(): void
+    public function __construct()
     {
-        // Hook into WooCommerce actions
-        add_action('woocommerce_before_add_to_cart_quantity', array(__CLASS__, 'add_custom_field_to_product_page'));
-        add_action('woocommerce_checkout_create_order_line_item', array(__CLASS__, 'save_custom_field_to_order'), 10, 4);
+        /**
+         * Hook into WooCommerce actions and filters
+         */
+        add_action( 'plugins_loaded', array( $this, 'custom-woocommerce-product-note' ) );
+        add_action( 'woocommerce_before_add_to_cart_quantity', array( $this, 'cwpn_add_to_product') ); // since WC 7.0.1
+        add_action( 'woocommerce_checkout_create_order_line_item', array( $this, 'cwpn_save_to_order_meta'), 10, 4 ); // since WC 3.1.0
 
-        add_filter('woocommerce_add_cart_item_data', array(__CLASS__, 'save_custom_field_to_cart'), 10, 2);
-        add_filter('woocommerce_get_item_data', array(__CLASS__, 'display_custom_field_in_cart'), 10, 2);
-        add_filter('woocommerce_cart_item_name', array(__CLASS__, 'display_custom_field_in_checkout'), 10000, 3 );
+        add_filter( 'woocommerce_add_cart_item_data', array( $this, 'cwpn_save_to_cart'), 10, 2 ); // since WC 2.5.0
+        add_filter( 'woocommerce_get_item_data', array( $this, 'cwpn_display_in_cart'), 10, 2 ); // since WC 4.3.0
+        add_filter( 'woocommerce_cart_item_name', array( $this, 'cwpn_display_in_checkout'), 10000, 3 ); // since 2.1.0
 
-        // Load frontend assets
-        add_action('wp_enqueue_scripts', array(__CLASS__, 'enqueue_scripts'));
+        /**
+         * Load frontend assets
+         */
+        add_action( 'wp_enqueue_scripts', array( $this, 'cwpn_enqueue_scripts') );
 
-        // Handle AJAX for updating the cart
-        add_action('wp_ajax_cw_save_cart_note', array(__CLASS__, 'ajax_save_cart_note'));
-        add_action('wp_ajax_nopriv_cw_save_cart_note', array(__CLASS__, 'ajax_save_cart_note'));
+        /**
+         * Handle AJAX for updating the cart
+         */
+        add_action( 'wp_ajax_cw_save_cart_note', array( $this, 'cwpn_save_cart_ajax') );
+        add_action( 'wp_ajax_nopriv_cw_save_cart_note', array( $this, 'cwpn_save_cart_ajax') );
 
-        // WooCommerce Customizer settings
-        add_action( 'customize_register', array(__CLASS__, 'cwpn_customize_register') );
+        /**
+         * Adds custom WooCommerce Product Note section to Customizer
+         */
+        add_action( 'customize_register', array( $this, 'cwpn_customize_register') );
     }
 
     /**
-     * Enqueue necessary JavaScript for handling the AJAX request
+     * If an instance exists, this returns it. If not, it creates one and returns it.
+     *
+     * @return bool | CW_Product_Note
      */
-    public static function enqueue_scripts(): void
+
+    public static function get_instance(): CW_Product_Note | bool
     {
-        if ( is_cart() || is_checkout() || is_product() ) {
+        if ( ! self::$instance ) {
+
+            self::$instance = new self;
+
+        }
+
+        return self::$instance;
+    }
+
+    /**
+     * Enqueues necessary styles and JavaScript
+     *
+     * @return void
+     */
+    public function cwpn_enqueue_scripts(): void
+    {
+        if ( is_cart() || is_product() ) {
 
             wp_enqueue_script(
                 'cwpn-ajax-script',
-                CWPN_URL . 'assets/js/cw-product-note.js',
+                CWPN_URL . 'public/js/cw-product-note.js',
                 array('jquery'),
                 CWPN_VERSION,
                 true
@@ -49,7 +84,7 @@ class CW_Product_Note
 
             wp_enqueue_style(
                 'cwpn-ajax-style',
-                CWPN_URL . 'assets/css/cw-product-note.css',
+                CWPN_URL . 'public/css/cw-product-note.css',
             );
 
             wp_enqueue_style(
@@ -67,29 +102,72 @@ class CW_Product_Note
     }
 
     /**
-     * Add custom field to the product page
+     * Renders HTML for the custom WooCommerce Product Note
+     *
+     * @param $label_value
+     * @param $placeholder_value
+     * @param $show_icon
+     * @param string $small_value
+     * @param string $cart_item_key
+     * @param string $textarea_content
+     * @return string
      */
-    public static function add_custom_field_to_product_page(): void
+    public function cwpn_get_textarea_shortcode( $label_value, $placeholder_value, $show_icon, $small_value = '',
+                                                        $cart_item_key = '', $textarea_content = '' ): string
     {
+        $shortcode = ! empty( $label_value ) ? '<label for="product_note">' . esc_html( $label_value ) . '</label>' : '';
+        $shortcode .= '<div class="product-note-container">';
+        $shortcode .= $show_icon ? '<i class="fas fa-comment-dots"></i>' : '';
+
+        if ( $cart_item_key && $textarea_content ) {
+
+            $shortcode .= '<div><textarea  rows="1"  name="product_note" class="edit-product-note cwpn-cart" 
+                            placeholder="' . esc_attr__( $placeholder_value ) . '" 
+                            data-cart-item-key="' . esc_attr( $cart_item_key ) . '">' . $textarea_content . '</textarea>';
+
+        } else {
+
+            $shortcode .= '<div><textarea rows="2" name="product_note" class="cwpn-product" placeholder="' . esc_attr( $placeholder_value ) . '" /></textarea>';
+
+        }
+
+        $shortcode .=  ! empty( $small_value ) ? '<small>' . esc_attr( $small_value ) . '</small>' : '';
+        $shortcode .= '</div></div>';
+
+        return $shortcode;
+    }
+
+    /**
+     * Adds the custom WooCommerce product note to product page
+     *
+     * @return void
+     */
+    public function cwpn_add_to_product(): void
+    {
+        if ( ! is_product() ) {
+            return;
+        }
+
         $label_value = get_theme_mod( 'cwpn_product_note_product_label' );
         $placeholder_value = get_theme_mod( 'cwpn_product_note_product_placeholder' );
         $small_value = get_theme_mod( 'cwpn_product_note_product_small' );
         $show_icon = get_theme_mod( 'cwpn_product_note_product_icon' );
+        $shortcode = self::cwpn_get_textarea_shortcode(
+            $label_value,
+            $placeholder_value,
+            $show_icon,
+            $small_value
+        );
 
-        echo '<label for="product_note">' . esc_html( $label_value ) . '</label>';
-        echo '<div class="product-note-container">';
-        echo $show_icon ? '<i class="fas fa-comment-dots"></i>' : '';
-        echo '<div><textarea name="product_note" placeholder="' . esc_attr( $placeholder_value ) . '" /></textarea>';
-        echo $small_value ? '<small>' . esc_attr( $small_value ) . '</small>' : '';
-        echo '</div></div>';
+        echo apply_filters( 'cwpn_textarea_shortcode_product', $shortcode );
     }
 
     /**
-     * Save the custom field value when adding to the cart
+     * Saves the custom WooCommerce product note when adding to the cart
      */
-    public static function save_custom_field_to_cart($cart_item_data, $product_id)
+    public function cwpn_save_to_cart($cart_item_data, $product_id)
     {
-        if ( isset($_POST['product_note']) ) {
+        if ( isset( $_POST['product_note'] ) ) {
 
             $cart_item_data['product_note'] = sanitize_textarea_field($_POST['product_note']);
             $cart_item_data['unique_key'] = md5(microtime() . rand());
@@ -100,43 +178,48 @@ class CW_Product_Note
     }
 
     /**
-     * Display custom field data in the cart
+     * Displays the custom WooCommerce product note in the cart
+     *
+     * @param $item_data
+     * @param $cart_item
+     * @return void
      */
-    public static function display_custom_field_in_cart($item_data, $cart_item): void
+    public function cwpn_display_in_cart($item_data, $cart_item): void
     {
-        $content = '';
-
-        if ( isset($cart_item['product_note']) ) {
-
-            $content = esc_html($cart_item['product_note']);
-
+        if ( ! isset( $cart_item['product_note'] ) || ! is_cart() ) {
+            return;
         }
 
-        $label_value = get_theme_mod( 'cwpn_product_note_cart_checkout_label' );
-        $placeholder_value = get_theme_mod( 'cwpn_product_note_cart_checkout_placeholder' );
-        $show_icon = get_theme_mod( 'cwpn_product_note_cart_checkout_icon' );
+        $content = esc_html($cart_item['product_note']);
+        $label_value = get_theme_mod( 'cwpn_product_note_cart_label' );
+        $placeholder_value = get_theme_mod( 'cwpn_product_note_cart_placeholder' );
+        $show_icon = get_theme_mod( 'cwpn_product_note_cart_icon' );
+        $shortcode = self::cwpn_get_textarea_shortcode(
+            $label_value,
+            $placeholder_value,
+            $show_icon,
+            '',
+            $cart_item['key'],
+            $content
+        );
 
-        if ( is_cart() ) {
-
-            echo '<label for="product_note">' . esc_html__( $label_value ) . '</label>';
-            echo '<div class="product-note-container">';
-            echo $show_icon ? '<i class="fas fa-comment-dots"></i>' : '';
-            echo '<textarea name="product_note"  rows="1" class="edit-product-note" placeholder="' . esc_attr__( $placeholder_value ) . '" data-cart-item-key="'
-                    . esc_attr( $cart_item['key'] ) . '">' . $content . '</textarea>
-            </div>';
-
-        }
+        echo apply_filters( 'cwpn_textarea_shortcode_cart', $shortcode );
     }
 
     /**
-     * Display custom field data in the checkout
+     * Displays the custom WooCommerce product note in the checkout
+     *
+     * @param $item_name
+     * @param $cart_item
+     * @param $cart_item_key
+     * @return string
      */
-    public static function display_custom_field_in_checkout($item_name, $cart_item, $cart_item_key): string
+    public function cwpn_display_in_checkout($item_name, $cart_item, $cart_item_key): string
     {
         if ( is_checkout() && isset( $cart_item['product_note'] ) ) {
 
             $content = esc_html( $cart_item['product_note'] );
-            $item_name .= '<br><span>Poznámka: ' . $content . '</span>';
+            $item_name .= '<br><span>' .  __( 'Product Note' ) . ': ' . $content . '</span>';
 
         }
 
@@ -144,9 +227,15 @@ class CW_Product_Note
     }
 
     /**
-     * Save the custom field data in the order meta
+     * Saves the custom WooCommerce product note in the order meta
+     *
+     * @param $item
+     * @param $cart_item_key
+     * @param $values
+     * @param $order
+     * @return void
      */
-    public static function save_custom_field_to_order($item, $cart_item_key, $values, $order): void
+    public function cwpn_save_to_order_meta($item, $cart_item_key, $values, $order): void
     {
         if ( isset( $values['product_note'] ) ) {
 
@@ -158,9 +247,11 @@ class CW_Product_Note
     }
 
     /**
-     * Handle the AJAX request to save the cart note
+     * Handles the AJAX request to save the custom WooCommerce product note in cart
+     *
+     * @return void
      */
-    public static function ajax_save_cart_note(): void
+    public function cwpn_save_cart_ajax(): void
     {
         check_ajax_referer('cw_save_note_nonce', 'security');
 
@@ -182,83 +273,94 @@ class CW_Product_Note
                 wp_send_json_error(__('Cart item not found.', 'custom-woocommerce-product-note'));
 
             }
-
         }
 
         wp_send_json_error(__('Failed to save product note.', 'custom-woocommerce-product-note'));
     }
 
     /**
-     * Create a new section in the WordPress Customizer for modifying the product note
+     * Creates a new section in the WordPress Customizer for modifying the custom WooCommerce product note
+     *
+     * @param $wp_customize
+     * @return void
      */
-    public static function cwpn_customize_register( $wp_customize ): void
+    public function cwpn_customize_register( $wp_customize ): void
     {
-        /** Add a new section for Product Note */
+        /**
+         * Add a new section for Product Note
+         */
         $wp_customize->add_section( 'cwpn_section', array(
             'title'      => __( 'Product Note', 'custom-woocommerce-product-note' ),
             'priority'   => 30,
             'description'=> __( 'Modify product note for WooCommerce products', 'custom-woocommerce-product-note' ),
         ) );
 
-        /** Add a setting for the product note Icon (Product Page) */
-        self::add_checkbox_setting_to_customizer(
+        /**
+         * Add settings for the Product Page
+         */
+        $this->cwpn_add_checkbox_setting_to_customizer(
             $wp_customize,
             'cwpn_product_note_product_icon',
             'cwpn_product_note_icon_product_control',
             'Show Icon (Product Page)'
         );
 
-        /**  Add a setting for the product note Label (Single Product Page) */
-        self::add_text_setting_to_customizer(
+        $this->cwpn_add_text_setting_to_customizer(
             $wp_customize,
             'cwpn_product_note_product_label',
             'cwpn_product_note_product_label_control',
             'Label (Product Page)'
         );
 
-        /**  Add a setting for the product note Placeholder (Single Product Page) */
-        self::add_text_setting_to_customizer(
+        $this->cwpn_add_text_setting_to_customizer(
             $wp_customize,
             'cwpn_product_note_product_placeholder',
             'cwpn_product_note_placeholder_product_control',
             'Placeholder (Product Page)'
         );
 
-        /**  Add a setting for the product note Placeholder (Single Product Page) */
-        self::add_text_setting_to_customizer(
-            $wp_customize,
-            'cwpn_product_note_product_placeholder',
-            'cwpn_product_note_placeholder_product_control',
-            'Placeholder (Product Page)'
-        );
-
-        /** Add a setting for the product note Small text (Single Product Page) */
-        self::add_checkbox_setting_to_customizer(
+        $this->cwpn_add_text_setting_to_customizer(
             $wp_customize,
             'cwpn_product_note_product_small',
             'cwpn_product_note_product_small_control',
-            'Small text (Product Page)'
+            'Small Text (Product Page)'
         );
 
-
-        /** Add a setting for the product note Label (Cart | Checkout Page) */
-        self::add_text_setting_to_customizer(
+        /**
+         * Add settings for the Cart Page
+         */
+        $this->cwpn_add_checkbox_setting_to_customizer(
             $wp_customize,
-            'cwpn_product_note_cart_checkout_label',
-            'cwpn_product_note_cart_checkout_label_control',
+            'cwpn_product_note_cart_icon',
+            'cwpn_product_note_cart_icon_control',
+            'Show Icon (Cart | Checkout Page)',
+        );
+
+        $this->cwpn_add_text_setting_to_customizer(
+            $wp_customize,
+            'cwpn_product_note_cart_label',
+            'cwpn_product_note_cart_label_control',
             'Label (Cart | Checkout Page)'
         );
 
-        /** Add a setting and control for the product note Placeholder (Cart | Checkout Page) */
-        self::add_text_setting_to_customizer(
+        $this->cwpn_add_text_setting_to_customizer(
             $wp_customize,
-            'cwpn_product_note_cart_checkout_placeholder',
+            'cwpn_product_note_cart_placeholder',
             'cwpn_product_note_placeholder_cart_control',
-            'Placeholder (Cart | Checkout Page)'
-        );
+            'Placeholder (Cart | Checkout Page)',
+);
     }
 
-    static public function add_text_setting_to_customizer( $wp_customize, $setting_title, $control_title, $label ): void
+    /**
+     * Adds a setting of type text to the Customizer Product Note section
+     *
+     * @param $wp_customize
+     * @param $setting_title
+     * @param $control_title
+     * @param $label
+     * @return void
+     */
+    private function cwpn_add_text_setting_to_customizer($wp_customize, $setting_title, $control_title, $label ): void
     {
         // Add a setting for the product note attribute
         $wp_customize->add_setting( $setting_title, array(
@@ -275,11 +377,20 @@ class CW_Product_Note
         ) );
     }
 
-    static public function add_checkbox_setting_to_customizer( $wp_customize, $setting_title, $control_title, $label ): void
+    /**
+     * Adds a setting of type checkbox to the Customizer Product Note section
+     *
+     * @param $wp_customize
+     * @param $setting_title
+     * @param $control_title
+     * @param $label
+     * @return void
+     */
+    private function cwpn_add_checkbox_setting_to_customizer($wp_customize, $setting_title, $control_title, $label ): void
     {
         // Add a setting for the product note icon
         $wp_customize->add_setting( $setting_title, array(
-            'default'           => 'true',
+            'default'           => 'checked',
         ) );
 
         // Add control for product note icon

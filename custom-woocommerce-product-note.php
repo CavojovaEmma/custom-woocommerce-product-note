@@ -3,14 +3,31 @@
 
 /**
  * Plugin Name: Custom WooCommerce Product Note
- * Plugin URI: https://yourwebsite.com
- * Description: A WooCommerce plugin that allows customers to add a custom note to products and edit it in the cart and checkout.
+ * Plugin URI: https://github.com/CavojovaEmma/custom-woocommerce-product-note
+ * Description: A WooCommerce plugin that allows customers to add a custom note to products when adding to cart
+ *              (and order items), edit it in the cart and display in checkout.
  * Version: 1.0
- * Author: Your Name
+ * Author: Emma Čavojová
  * Author URI: https://dev-emma-cavojova.pantheonsite.io/
+ * Requires at least: 2.1.0
+ * Tested up to: 6.6.2
+ * Requires PHP: 5.6+
  * Text Domain: custom-woocommerce-product-note
- * Domain Path: /
- * License: GPL2
+ * License: GPL v3
+ * License URI: https://www.gnu.org/licenses/gpl-3.0.html
+ *
+ * Custom WooCommerce Product Note is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Custom WooCommerce Product Note is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Custom WooCommerce Product Note. If not, see https://www.gnu.org/licenses/.
  */
 
 
@@ -18,17 +35,44 @@ if ( ! defined('ABSPATH') ) {
     exit;
 }
 
-// Define plugin constants
-define('CWPN_VERSION', '1.0');
-define('CWPN_PATH', plugin_dir_path(__FILE__));
-define('CWPN_URL', plugin_dir_url(__FILE__));
+/**
+ * Define plugin constants
+ */
+if ( ! defined( 'CWPN_VERSION' ) ) {
 
-// Include the main class
+    define('CWPN_VERSION', '1.0.0');
+
+}
+
+if ( ! defined( 'CWPN_PATH' ) ) {
+
+    define('CWPN_PATH', plugin_dir_path(__FILE__));
+
+}
+
+if ( ! defined( 'CWPN_URL' ) ) {
+
+    define('CWPN_URL', plugin_dir_url(__FILE__));
+
+}
+
+/**
+ * Include the main class
+ */
 if ( ! class_exists('CW_Product_Note') ) {
 
     include_once CWPN_PATH . 'includes/class-cw-product-note.php';
 
 }
 
-// Initialize the plugin
-add_action('woocommerce_init', array('CW_Product_Note', 'init'));
+
+/**
+ * Initialize the plugin
+ *
+ * @return void
+ */
+function initialize_custom_woocommerce_product_note_plugin(): void
+{
+    CW_Product_Note::get_instance();
+}
+add_action( 'woocommerce_init', 'initialize_custom_woocommerce_product_note_plugin' );
