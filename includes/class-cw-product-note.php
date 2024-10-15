@@ -24,7 +24,7 @@ class CW_Product_Note
          * Hook into WooCommerce actions and filters
          */
         add_action( 'plugins_loaded', array( $this, 'custom-woocommerce-product-note' ) );
-        add_action( 'woocommerce_before_add_to_cart_quantity', array( $this, 'cwpn_add_to_product') ); // since WC 7.0.1
+        add_action( 'woocommerce_before_add_to_cart_quantity', array( $this, 'cwpn_display_in_product') ); // since WC 7.0.1
         add_action( 'woocommerce_checkout_create_order_line_item', array( $this, 'cwpn_save_to_order_meta'), 10, 4 ); // since WC 3.1.0
 
         add_filter( 'woocommerce_add_cart_item_data', array( $this, 'cwpn_save_to_cart'), 10, 2 ); // since WC 2.5.0
@@ -77,9 +77,14 @@ class CW_Product_Note
             wp_enqueue_script(
                 'cwpn-ajax-script',
                 CWPN_URL . 'public/js/cw-product-note.js',
-                array('jquery'),
+                array( 'jquery' ),
                 CWPN_VERSION,
                 true
+            );
+
+            wp_enqueue_script(
+                'cwpn-textarea-autosize',
+                'https://rawgit.com/jackmoore/autosize/master/dist/autosize.min.js',
             );
 
             wp_enqueue_style(
@@ -94,8 +99,8 @@ class CW_Product_Note
 
 
             wp_localize_script('cwpn-ajax-script', 'cw_ajax_obj', array(
-                'ajax_url' => admin_url('admin-ajax.php'),
-                'nonce' => wp_create_nonce('cw_save_note_nonce'),
+                'ajax_url' => admin_url( 'admin-ajax.php' ),
+                'nonce' => wp_create_nonce( 'cw_save_note_nonce' ),
             ));
 
         }
@@ -112,22 +117,23 @@ class CW_Product_Note
      * @param string $textarea_content
      * @return string
      */
-    public function cwpn_get_textarea_shortcode( $label_value, $placeholder_value, $show_icon, $small_value = '',
-                                                        $cart_item_key = '', $textarea_content = '' ): string
+    public function cwpn_get_textarea_shortcode($label_value, $placeholder_value, $show_icon, string $small_value = '',
+                                                string $cart_item_key = '', string $textarea_content = '' ): string
     {
         $shortcode = ! empty( $label_value ) ? '<label for="product_note">' . esc_html( $label_value ) . '</label>' : '';
         $shortcode .= '<div class="product-note-container">';
         $shortcode .= $show_icon ? '<i class="fas fa-comment-dots"></i>' : '';
 
-        if ( $cart_item_key && $textarea_content ) {
+        if ( $cart_item_key || $textarea_content ) {
 
-            $shortcode .= '<div><textarea  rows="1"  name="product_note" class="edit-product-note cwpn-cart" 
+            $shortcode .= '<div><textarea rows="1"  name="product_note" class="cwpn edit-product-note" 
                             placeholder="' . esc_attr__( $placeholder_value ) . '" 
                             data-cart-item-key="' . esc_attr( $cart_item_key ) . '">' . $textarea_content . '</textarea>';
 
         } else {
 
-            $shortcode .= '<div><textarea rows="2" name="product_note" class="cwpn-product" placeholder="' . esc_attr( $placeholder_value ) . '" /></textarea>';
+            $shortcode .= '<div><textarea rows="2" name="product_note" class="cwpn" placeholder="'
+                . esc_attr( $placeholder_value ) . '" /></textarea>';
 
         }
 
@@ -142,7 +148,7 @@ class CW_Product_Note
      *
      * @return void
      */
-    public function cwpn_add_to_product(): void
+    public function cwpn_display_in_product(): void
     {
         if ( ! is_product() ) {
             return;
@@ -156,7 +162,9 @@ class CW_Product_Note
             $label_value,
             $placeholder_value,
             $show_icon,
-            $small_value
+            $small_value,
+            '',
+            ''
         );
 
         echo apply_filters( 'cwpn_textarea_shortcode_product', $shortcode );
@@ -167,10 +175,10 @@ class CW_Product_Note
      */
     public function cwpn_save_to_cart($cart_item_data, $product_id)
     {
-        if ( isset( $_POST['product_note'] ) ) {
+        if ( isset( $_POST[ 'product_note' ] ) ) {
 
-            $cart_item_data['product_note'] = sanitize_textarea_field($_POST['product_note']);
-            $cart_item_data['unique_key'] = md5(microtime() . rand());
+            $cart_item_data[ 'product_note' ] = sanitize_textarea_field( $_POST[ 'product_note' ] );
+            $cart_item_data[ 'unique_key' ] = md5( microtime() . rand() );
 
         }
 
@@ -190,7 +198,7 @@ class CW_Product_Note
             return;
         }
 
-        $content = esc_html($cart_item['product_note']);
+        $content = esc_html( $cart_item[ 'product_note' ] );
         $label_value = get_theme_mod( 'cwpn_product_note_cart_label' );
         $placeholder_value = get_theme_mod( 'cwpn_product_note_cart_placeholder' );
         $show_icon = get_theme_mod( 'cwpn_product_note_cart_icon' );
@@ -216,12 +224,13 @@ class CW_Product_Note
      */
     public function cwpn_display_in_checkout($item_name, $cart_item, $cart_item_key): string
     {
-        if ( is_checkout() && isset( $cart_item['product_note'] ) ) {
-
-            $content = esc_html( $cart_item['product_note'] );
-            $item_name .= '<br><span>' .  __( 'Product Note' ) . ': ' . $content . '</span>';
-
+        if ( ! is_checkout() || empty( $cart_item[ 'product_note' ] ) ) {
+            return $item_name;
         }
+
+        $order_item_title = get_theme_mod( 'cwpn_order_item_product_note_title' );
+        $content = esc_html( $cart_item[ 'product_note' ] );
+        $item_name .= '<br><span>' .  __( $order_item_title ) . ': ' . $content . '</span>';
 
         return $item_name;
     }
@@ -237,9 +246,10 @@ class CW_Product_Note
      */
     public function cwpn_save_to_order_meta($item, $cart_item_key, $values, $order): void
     {
-        if ( isset( $values['product_note'] ) ) {
+        if ( isset( $values[ 'product_note' ] ) ) {
 
-            $item->add_meta_data(__('Poznámka', 'custom-woocommerce-product-note'), $values['product_note'], true);
+            $order_item_title = get_theme_mod( 'cwpn_order_item_product_note_title' );
+            $item->add_meta_data( __( $order_item_title, 'custom-woocommerce-product-note' ), $values[ 'product_note' ], true );
             $item->save();
 
         }
@@ -295,6 +305,15 @@ class CW_Product_Note
             'description'=> __( 'Modify product note for WooCommerce products', 'custom-woocommerce-product-note' ),
         ) );
 
+
+        $this->cwpn_add_text_setting_to_customizer(
+            $wp_customize,
+            'cwpn_order_item_product_note_title',
+            'cwpn_order_item_product_note_control',
+            'Custom Order Item Title',
+            'Product Note'
+        );
+
         /**
          * Add settings for the Product Page
          */
@@ -316,7 +335,8 @@ class CW_Product_Note
             $wp_customize,
             'cwpn_product_note_product_placeholder',
             'cwpn_product_note_placeholder_product_control',
-            'Placeholder (Product Page)'
+            'Placeholder (Product Page)',
+            'You can specify product note here.'
         );
 
         $this->cwpn_add_text_setting_to_customizer(
@@ -348,6 +368,7 @@ class CW_Product_Note
             'cwpn_product_note_cart_placeholder',
             'cwpn_product_note_placeholder_cart_control',
             'Placeholder (Cart | Checkout Page)',
+            'You can specify product note here.'
 );
     }
 
@@ -358,13 +379,14 @@ class CW_Product_Note
      * @param $setting_title
      * @param $control_title
      * @param $label
+     * @param string $default_value
      * @return void
      */
-    private function cwpn_add_text_setting_to_customizer($wp_customize, $setting_title, $control_title, $label ): void
+    private function cwpn_add_text_setting_to_customizer($wp_customize, $setting_title, $control_title, $label, $default_value = '' ): void
     {
         // Add a setting for the product note attribute
         $wp_customize->add_setting( $setting_title, array(
-            'default'           => '',
+            'default'           => $default_value,
             'sanitize_callback' => 'sanitize_text_field',
         ) );
 

@@ -12,10 +12,19 @@
     font-size: 14px;
     border-radius: 10px;
     cursor: pointer;
-}
-
-.product-note-container > div > textarea:focus {
-    border-color: #e48100;
+    direction:ltr;
+    display:block;
+    max-width:100%;
+    line-height:1.5;
+    border:1px solid #f2f2f2;
+    transition:box-shadow 0.5s ease;
+    box-shadow:0 4px 6px rgba(0,0,0,0.1);
+    background:-o-linear-gradient(#fafafa, #f2f2f2);
+    background:-ms-linear-gradient(#fafafa, #f2f2f2);
+    background:-moz-linear-gradient(#fafafa, #f2f2f2);
+    background:-webkit-linear-gradient(#fafafa, #f2f2f2);
+    background:linear-gradient(#fafafa, #f2f2f2);
+    height:100%;
 }
 
 .product-note-container > i {

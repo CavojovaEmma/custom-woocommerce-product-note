@@ -4,8 +4,8 @@
 /**
  * Plugin Name: Custom WooCommerce Product Note
  * Plugin URI: https://github.com/CavojovaEmma/custom-woocommerce-product-note
- * Description: A WooCommerce plugin that allows customers to add a custom note to products when adding to cart
- *              (and order items), edit it in the cart and display in checkout.
+ * Description: This WooCommerce plugin provides an intuitive way for customers to add notes to products, while ensuring these details
+                are preserved from the cart through to order completion and email notifications.
  * Version: 1.0
  * Author: Emma Čavojová
  * Author URI: https://dev-emma-cavojova.pantheonsite.io/

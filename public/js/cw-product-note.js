@@ -23,3 +23,6 @@ jQuery(document).ready(function($) {
     });
 });
 
+autosize(document.getElementsByClassName("cwpn"));
+
+
