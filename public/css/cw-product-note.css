@@ -1,7 +1,12 @@
+
 .product-note-container {
     display: flex;
     align-items: start;
     gap: 15px;
+}
+
+.product-note-container:not(.cwpn-cart) {
+    margin-bottom: 30px;
 }
 
 .product-note-container > div > textarea {
@@ -25,6 +30,7 @@
     background:-webkit-linear-gradient(#fafafa, #f2f2f2);
     background:linear-gradient(#fafafa, #f2f2f2);
     height:100%;
+    margin-bottom: 10px;
 }
 
 .product-note-container > i {

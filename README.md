@@ -18,7 +18,7 @@ DESCRIPTION
 Key features of the plugin:
 * **Product-Specific Notes:** Adds a customizable (more info below) textarea on each product page and cart page, 
 allowing customers to write a note when selecting a product (e.g., for custom requests or variations).
-* **AJAX Cart Editing:** Customers can easily edit their product note directly from the cart without needing to reload
+* **AJAX Cart Editing:** Customers can easily edit (or add, or remove) their product note directly from the cart without needing to reload
 the page, enhancing user experience and efficiency.
 * **Order Item Meta Storage:** The note is saved with the product as part of the order item's metadata when the order is placed.
 * **Email Integration:** The product note is included in the order confirmation email sent to the customer,
@@ -70,7 +70,18 @@ If you need to use the order item's note beyond the functionality of this plugin
 * To retrieve the order item's note, use the title as the key:<br>
 ` $order_item->get_meta( $order_item_product_note_title );`
 
+SCREENSHOTS
+---
+1. **Customizer Product Note Settings**
+![ScreenShot](https://dev-emma-cavojova.pantheonsite.io/wp-content/uploads/2024/10/photo_2024-10-15_15-28-41.jpg "Product Note Customizer Settings")
+2. **Adding product to cart with specified note**
+![ScreenShot](https://dev-emma-cavojova.pantheonsite.io/wp-content/uploads/2024/10/photo_2024-10-15_15-23-40.jpg "Adding product to cart with specified note")
+3. **Editing product notes in cart**
+![ScreenShot](https://dev-emma-cavojova.pantheonsite.io/wp-content/uploads/2024/10/photo_2024-10-15_15-23-43.jpg "Editing product notes in cart")
+4. **Proceeding to checkout with product notes included in the order summary**
+![ScreenShot](https://dev-emma-cavojova.pantheonsite.io/wp-content/uploads/2024/10/photo_2024-10-15_15-23-45.jpg "Order summary")
 
+  
 
 LICENSE DETAILS
 ---------------
