@@ -223,7 +223,7 @@ class CW_Product_Note
      */
     public function cwpn_display_in_checkout($item_name, $cart_item, $cart_item_key): string
     {
-        if ( ! is_checkout() || empty( $cart_item[ 'product_note' ] ) ) {
+        if ( ! is_cart() || ! is_checkout() || empty( $cart_item[ 'product_note' ] ) ) {
             return $item_name;
         }
 
@@ -312,7 +312,7 @@ class CW_Product_Note
             'cwpn_order_item_product_note_title',
             'cwpn_order_item_product_note_control',
             'Custom Order Items Title',
-            'The title is shown in the order items summary and is the key used to store the product note in the order items metadata.',
+            'The title for the product note is shown in the order summary and is used as a metadata key to store the note in the order items.',
             'Product Note'
         );
 
@@ -412,7 +412,7 @@ class CW_Product_Note
             'section'  => 'cwpn_section',
             'settings' => $setting_title,
             'type'     => 'text',
-            '$description' => __( $description )
+            'description' => __( $description )
         ) );
     }
 

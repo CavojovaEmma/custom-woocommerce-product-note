@@ -16,17 +16,19 @@ DESCRIPTION
 -----------
 
 Key features of the plugin:
-* **Product-Specific Notes:** Adds a customizable (more info below) textarea on each product page and cart page, 
+* **Product-Specific Notes:** Adds a customizable and automatically sized textarea on each product page and cart page, 
 allowing customers to write a note when selecting a product (e.g., for custom requests or variations).
 * **AJAX Cart Editing:** Customers can easily edit (or add, or remove) their product note directly from the cart without needing to reload
 the page, enhancing user experience and efficiency.
 * **Order Item Meta Storage:** The note is saved with the product as part of the order item's metadata when the order is placed.
 * **Email Integration:** The product note is included in the order confirmation email sent to the customer,
 ensuring all custom details are communicated clearly.
-* **Fully Customizable via Theme Customizer:** Customize the textarea attributes, such as the label, placeholder, icon, 
+* **Customizable via Theme Customizer:** Customize the textarea attributes, such as the order item note title, label, placeholder, icon, 
 and small text under the textarea, directly from the Theme Customizer. These customizations are available in 
 a dedicated "Product Note" section for both the product and cart pages.
-* **Developer-Friendly Hooks:** The plugin provides hooks that developers can use to customize the textarea HTML programmatically. Modify the appearance of the textarea on the product page or cart with ease, making the plugin highly adaptable to custom themes or advanced functionality.
+* **Developer-Friendly Hooks:** The plugin provides hooks that developers can use to customize the textarea HTML programmatically.
+Modify the appearance of the textarea on the product page or cart with ease, making the plugin highly adaptable to custom themes or
+advanced functionality.
 
 This plugin provides an intuitive way for customers to add notes to products, while ensuring these details
 are preserved from the cart through to order completion and email notifications.
@@ -60,15 +62,17 @@ Browsers
 * Firefox, Chrome, Safari, Opera, IE 10+
 * Tested on Firefox, Chrome
 
-
-FURTHER USE OF ORDER ITEM'S NOTE META AFTER ORDER SUBMISSION
+DEVELOPMENT
 ---
+* **Use of filter hooks:** To customize the product note textarea on the product and/or cart pages, you can use the filter hooks 
+`cwpn_textarea_shortcode_cart` and `cwpn_textarea_shortcode_product` respectively.
+* **Further use of order items note after order submission:** 
 If you need to use the order item's note beyond the functionality of this plugin:
-* The order item's note is stored in metadata under a **key** that matches the note's title. You can set this title in the Customizer under the *Product Note* section.
-* To get the order item's note title, use:<br>
-  `$order_item_product_note_title = get_theme_mod( 'cwpn_order_item_product_note_title' );`<br>
-* To retrieve the order item's note, use the title as the key:<br>
-` $order_item->get_meta( $order_item_product_note_title );`
+   * The order item's note is stored in metadata under a **key** that matches the note's title. You can set this title in the Customizer under the *Product Note* section.
+   * To get the order item's note title, use:<br>
+     `$order_item_product_note_title = get_theme_mod( 'cwpn_order_item_product_note_title' );`<br>
+   * To retrieve the order item's note, use the title as the key:<br>
+   ` $order_item->get_meta( $order_item_product_note_title );`
 
 SCREENSHOTS
 ---
