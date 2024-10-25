@@ -7,7 +7,7 @@ this plugin ensures seamless communication between your customers and your store
 - Author: Emma Čavojová
 - Version: 20241014
 - Plugin URL: https://github.com/CavojovaEmma/custom-woocommerce-product-note
-- Demo URL: https://dev-emma-cavojova.pantheonsite.io/custom-plugins#custom-woocommerce-product-note
+- Demo URL: https://dev-emma-cavojova.pantheonsite.io/custom-woocommerce-product-note/
 - Author URL: https://dev-emma-cavojova.pantheonsite.io
 - License: GNU General Public License v3 or later
 - License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -65,7 +65,7 @@ Browsers
 DEVELOPMENT
 ---
 * **Use of filter hooks:** To customize the product note textarea on the product and/or cart pages, you can use the filter hooks 
-`cwpn_textarea_shortcode_cart` and `cwpn_textarea_shortcode_product` respectively.
+`cwpn_textarea_shortcode_product` and `cwpn_textarea_shortcode_cart` respectively.
 * **Further use of order items note after order submission:** 
 If you need to use the order item's note beyond the functionality of this plugin:
    * The order item's note is stored in metadata under a **key** that matches the note's title. You can set this title in the Customizer under the *Product Note* section.

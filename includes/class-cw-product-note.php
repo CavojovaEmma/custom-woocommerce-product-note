@@ -223,13 +223,13 @@ class CW_Product_Note
      */
     public function cwpn_display_in_checkout($item_name, $cart_item, $cart_item_key): string
     {
-        if ( ! is_cart() || ! is_checkout() || empty( $cart_item[ 'product_note' ] ) ) {
+        if ( ( ! is_checkout() ) || empty( $cart_item[ 'product_note' ] ) ) {
             return $item_name;
         }
 
         $order_item_title = get_theme_mod( 'cwpn_order_item_product_note_title' );
         $content = esc_html( $cart_item[ 'product_note' ] );
-        $item_name .= '<br><span>' .  __( $order_item_title ) . ': ' . $content . '</span>';
+        $item_name .= '<span>' .  __( $order_item_title ) . ': ' . $content . '</span>';
 
         return $item_name;
     }
