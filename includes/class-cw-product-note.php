@@ -197,10 +197,10 @@ class CW_Product_Note
         }
 
         $content = esc_html( $cart_item[ 'product_note' ] );
-        $label_value = get_theme_mod( 'cwpn_product_note_cart_label' );
-        $placeholder_value = get_theme_mod( 'cwpn_product_note_cart_placeholder' );
-        $small_value = get_theme_mod( 'cwpn_product_note_cart_small' );
-        $show_icon = get_theme_mod( 'cwpn_product_note_cart_icon' );
+        $label_value = esc_attr( get_theme_mod( 'cwpn_product_note_cart_label' ) );
+        $placeholder_value = esc_attr( get_theme_mod( 'cwpn_product_note_cart_placeholder' ) );
+        $small_value = esc_attr( get_theme_mod( 'cwpn_product_note_cart_small' ) );
+        $show_icon = esc_attr( get_theme_mod( 'cwpn_product_note_cart_icon' ) );
         $shortcode = self::cwpn_get_textarea_shortcode(
             $label_value,
             $placeholder_value,
@@ -227,7 +227,7 @@ class CW_Product_Note
             return $item_name;
         }
 
-        $order_item_title = get_theme_mod( 'cwpn_order_item_product_note_title' );
+        $order_item_title = esc_attr( get_theme_mod( 'cwpn_order_item_product_note_title' ) );
         $content = esc_html( $cart_item[ 'product_note' ] );
         $item_name .= '<span>' .  __( $order_item_title ) . ': ' . $content . '</span>';
 
@@ -247,7 +247,7 @@ class CW_Product_Note
     {
         if ( isset( $values[ 'product_note' ] ) ) {
 
-            $order_item_title = get_theme_mod( 'cwpn_order_item_product_note_title' );
+            $order_item_title = esc_attr(  get_theme_mod( 'cwpn_order_item_product_note_title' ) );
             $item->add_meta_data( __( $order_item_title, 'custom-woocommerce-product-note' ), $values[ 'product_note' ], true );
             $item->save();
 
