@@ -28,7 +28,9 @@ class CW_Product_Note
         add_action( 'woocommerce_checkout_create_order_line_item', array( $this, 'cwpn_save_to_order_meta'), 10, 4 ); // since WC 3.1.0
 
         add_filter( 'woocommerce_add_cart_item_data', array( $this, 'cwpn_save_to_cart'), 10, 2 ); // since WC 2.5.0
-        add_filter( 'woocommerce_get_item_data', array( $this, 'cwpn_display_in_cart'), 10, 2 ); // since WC 4.3.0
+//        add_filter( 'woocommerce_get_item_data', array( $this, 'cwpn_display_in_cart'), 10, 2 ); // since WC 4.3.0
+//        add_filter( 'woocommerce_cart_item_name', array( $this, 'cwpn_display_in_cart'), 10000, 2 ); // since WC 4.3.0
+        add_action( 'woocommerce_after_cart_item_name', array( $this, 'cwpn_display_in_cart'), 10 ); // since WC 4.3.0
         add_filter( 'woocommerce_cart_item_name', array( $this, 'cwpn_display_in_checkout'), 10000, 3 ); // since 2.1.0
 
         /**
@@ -123,8 +125,7 @@ class CW_Product_Note
         $shortcode = ! empty( $label_value ) ? '<label for="product_note">' . esc_html( $label_value ) . '</label>' : '';
         $shortcode .=  '<div class="product-note-container' . (! empty($cart_item_key) ? ' cwpn-cart' : '') . '">';
         $shortcode .= $show_icon ? '<i class="fas fa-comment-dots"></i>' : '';
-
-        if ( $cart_item_key || $textarea_content ) {
+        if ( $cart_item_key ) {
 
             $shortcode .= '<div><textarea rows="1"  name="product_note" class="cwpn edit-product-note" 
                             placeholder="' . esc_attr__( $placeholder_value ) . '" 
@@ -188,15 +189,19 @@ class CW_Product_Note
      *
      * @param $item_data
      * @param $cart_item
-     * @return void
+     * @return string
      */
-    public function cwpn_display_in_cart($item_data, $cart_item): void
+    public function cwpn_display_in_cart($cart_item): void
     {
-        if ( ! isset( $cart_item['product_note'] ) || ! is_cart() ) {
+        if ( ! is_cart() ) {
             return;
         }
 
-        $content = esc_html( $cart_item[ 'product_note' ] );
+        $content = '';
+
+        if ( isset( $cart_item['product_note'] ) ) {
+            $content = esc_html( $cart_item['product_note'] );
+        }
         $label_value = esc_attr( get_theme_mod( 'cwpn_product_note_cart_label' ) );
         $placeholder_value = esc_attr( get_theme_mod( 'cwpn_product_note_cart_placeholder' ) );
         $small_value = esc_attr( get_theme_mod( 'cwpn_product_note_cart_small' ) );
@@ -206,10 +211,9 @@ class CW_Product_Note
             $placeholder_value,
             $show_icon,
             $small_value,
-            $cart_item[ 'key' ],
+            $cart_item['key'],
             $content
         );
-
         echo apply_filters( 'cwpn_textarea_shortcode_cart', $shortcode );
     }
 

@@ -11,7 +11,7 @@
  * Author URI: https://dev-emma-cavojova.pantheonsite.io/
  * Requires at least: 2.1.0
  * Tested up to: 6.6.2
- * Requires PHP: 5.6+
+ * Requires PHP: 7.1+
  * Text Domain: custom-woocommerce-product-note
  * License: GPL v3
  * License URI: https://www.gnu.org/licenses/gpl-3.0.html
